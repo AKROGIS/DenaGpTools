@@ -5,24 +5,57 @@ class Toolbox(object):
     def __init__(self):
         """Define the toolbox (the name of the toolbox is the name of the
         .pyt file)."""
-        self.label = "Toolbox"
-        self.alias = ""
+        self.label = "DENA 2013 Tools"
+        self.alias = "GP Tools for Denali"
 
         # List of tool classes associated with this toolbox
-        self.tools = [Tool]
+        self.tools = [ShapeImport]
 
 
-class Tool(object):
+class ShapeImport(object):
+    # For a class definition, see http://resources.arcgis.com/en/help/main/10.1/index.html#/Defining_a_tool_in_a_Python_toolbox/001500000024000000/
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Tool"
-        self.description = ""
+        self.label = "ShapeImport"
+        self.description = "Adds a shapefile to a GDB with a column for the shape name"
         self.canRunInBackground = False
 
     def getParameterInfo(self):
-        """Define parameter definitions"""
-        params = None
-        return params
+        #See http://resources.arcgis.com/en/help/main/10.1/index.html#/Defining_parameters_in_a_Python_toolbox/001500000028000000/
+
+        param0 = arcpy.Parameter(
+            displayName="Shapefile",
+            name="shapefile",
+            datatype="DEShapefile",
+            parameterType="Required",
+            direction="Input")
+
+        param1 = arcpy.Parameter(
+            displayName="GDB Feature Class",
+            name="geodatabase",
+            datatype="DEFeatureClass",
+            parameterType="Required",
+            direction="Input")
+
+        param2 = arcpy.Parameter(
+            displayName="Name Field",
+            name="name_field",
+            datatype="Field",
+            parameterType="Required",
+            direction="Input")
+            
+        #param2 must be a text field from param1
+        param2.parameterDependencies = [param1.name]
+        param2.filter.list = ["Text"]
+
+        param3 = arcpy.Parameter(
+            displayName="Field Mapping",
+            name="field_mapping",
+            datatype="GPFieldMapping",
+            parameterType="Optional",
+            direction="Input")
+
+        return [param0, param1, param2, param3]
 
     def isLicensed(self):
         """Set whether tool is licensed to execute."""
@@ -32,6 +65,7 @@ class Tool(object):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
+        #See http://resources.arcgis.com/en/help/main/10.1/index.html#/Customizing_tool_behavior_in_a_Python_toolbox/00150000002m000000/
         return
 
     def updateMessages(self, parameters):
