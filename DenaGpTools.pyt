@@ -105,9 +105,9 @@ class ShapeImport(object):
 
     def execute(self, parameters, messages):
         """The source code of the tool."""
-        shapefile = parameters[0].value
+        shapefile = parameters[0].valueAsText
         featureClass = parameters[1].value
-        fileNameFieldName = parameters[2].value
+        fileNameFieldName = parameters[2].valueAsText
         fieldMapping = parameters[3].value
         AddShapefile(shapefile, featureClass, fileNameFieldName, fieldMapping)
         return
@@ -120,19 +120,19 @@ class ShapeImport(object):
             # copy shapefile to a temp (in-memory) feature class.
             tempShapefile = arcpy.FeatureClassToFeatureClass_conversion(shapefile, "in_memory", "temp_shapefile", "")
             # add filename field to temp shapefile if it doesn't exist
-            if not hasField(tempShapefile,fileNameFieldName)
+            if not hasField(tempShapefile,fileNameFieldName):
                 arcpy.AddField_management(tempShapefile, fileNameFieldName, "TEXT")
             # calculate value of filename field in new temp shapefile
-            arcpy.CalculateField_management(tempShapefile, fileNameFieldName, fileName, "PYTHON", "")
+            arcpy.CalculateField_management(tempShapefile, fileNameFieldName, '"' + fileName + '"')
             # append shapefile to output FC, using field mapping.
             arcpy.Append_management([tempShapefile], featureClass, "NO_TEST", fieldMapping)
         finally:
             #delete temp shapefile
             if tempShapefile:
                 arcpy.Delete_management(tempShapefile)
-    
-    def hasField(featureClass,fieldName)
+
+    def hasField(featureClass,fieldName):
         for field in arcpy.ListFields(featureClass):
-            if field.Name == fieldName.:
+            if field.name == fieldName:
                 return True
         return False
