@@ -108,28 +108,31 @@ class ShapeImport(object):
         return
 
 def AddShapefile(shapefile, featureClass, fileNameFieldName, fieldMapping):
-    tempShapefile = None
+    """ Appends a shapefile to a featureclass, writing the shapefile name into
+    the fileNameFieldName field in the featureClass."""
+    
+    tempFC = None
     try:
         # get basename of shapefile without extension
         fileName = os.path.splitext(os.path.split(shapefile)[1])[0]
         # copy shapefile to a temp (in-memory) feature class.
-        tempShapefile = arcpy.FeatureClassToFeatureClass_conversion(shapefile, "in_memory", "temp_shapefile", "")
-        # add filename field to temp shapefile if it doesn't exist
-        if not hasField(tempShapefile,fileNameFieldName):
-            arcpy.AddField_management(tempShapefile, fileNameFieldName, "TEXT")
+        tempFC = arcpy.FeatureClassToFeatureClass_conversion(shapefile, "in_memory", "temp_fc", "")
+        # add filename field to temp feature class if it doesn't exist
+        if not hasField(tempFC,fileNameFieldName):
+            arcpy.AddField_management(tempFC, fileNameFieldName, "TEXT")
             map = arcpy.FieldMap()
-            map.addInputField(tempShapefile,fileNameFieldName)
+            map.addInputField(tempFC,fileNameFieldName)
             #fieldMapping.addFieldMap(map) # ValueError: FieldMappings: AddFieldMap input not field map object      
-            #FIXME - workaround - We overwrite the user specified field mapping
-            fieldMapping.addTable(tempShapefile)
-        # calculate value of filename field in new temp shapefile
-        arcpy.CalculateField_management(tempShapefile, fileNameFieldName, '"' + fileName + '"')
-        # append shapefile to output FC, using field mapping.
-        arcpy.Append_management([tempShapefile], featureClass, "NO_TEST", fieldMapping)
+            #FIXME - workaround - Overwrite the user specified field mapping
+            fieldMapping.addTable(tempFC)
+        # write the shapefile filename in all rows of the temp feature class
+        arcpy.CalculateField_management(tempFC, fileNameFieldName, '"' + fileName + '"')
+        # append temp feature class to output feature class, using field mapping.
+        arcpy.Append_management([tempFC], featureClass, "NO_TEST", fieldMapping)
     finally:
-        #delete temp shapefile
-        if tempShapefile:
-            arcpy.Delete_management(tempShapefile)
+        #delete temp feature class
+        if tempFC:
+            arcpy.Delete_management(tempFC)
 
 def hasField(featureClass,fieldName):
     for field in arcpy.ListFields(featureClass):
