@@ -77,18 +77,11 @@ class ShapeImport(object):
         #                break
         
         #Setup field mapping
-        if (not parameters[0].hasBeenValidated or not parameters[1].hasBeenValidated):
-            targetFeatures = parameters[1].value
+        if (not parameters[0].hasBeenValidated):
             joinFeatures = parameters[0].value
             fieldMappings = arcpy.FieldMappings()
-            if targetFeatures:
-                fieldMappings.addTable(targetFeatures)
-                if joinFeatures:
-                    fieldMappings.addTable(joinFeatures)
-                    #idx = fieldMappings.findFieldMapIndex("PRIORITY")
-                    #fieldMap = fieldMappings.getFieldMap(idx)
-                    #fieldMap.mergeRule = 'Sum'
-                    #fieldMappings.replaceFieldMap(idx, fieldMap) # if this line is commented out, the merge rule reverts to 'First'
+            if joinFeatures:
+                fieldMappings.addTable(joinFeatures)
             parameters[3].value = fieldMappings.exportToString()
         return
 
