@@ -69,12 +69,14 @@ class ShapeImport(object):
         #See http://resources.arcgis.com/en/help/main/10.1/index.html#/Customizing_tool_behavior_in_a_Python_toolbox/00150000002m000000/
         
         #set default field name - this does not work.  Can't set the parameter to a field object
-        #if parameters[1].value:
-        #    if not parameters[2].altered:
-        #        for field in arcpy.Describe(parameters[1].value).fields:
-        #            if field.type == "String" and field.name.lower() == "filename":
-        #                parameters[2].value = field.name
-        #                break
+        if parameters[1].value:
+            if not parameters[2].altered:
+                for field in arcpy.Describe(parameters[1].value).fields:
+                    if field.type == "String" and field.name.lower() == "filename":
+                        #parameters[2].valueAsText = field.name  #can't set ValueAsText
+                        #parameters[2].value = field.name  #Validation error field.Name is text, not field object
+                        parameters[2].value = field  # Leaves value as null
+                        break
         
         #Setup field mapping
         if (not parameters[0].hasBeenValidated):
