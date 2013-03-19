@@ -128,6 +128,6 @@ def AddShapefile(shapefile, featureClass, fileNameFieldName, fieldMapping):
 
 def hasField(featureClass,fieldName):
     for field in arcpy.ListFields(featureClass):
-        if field.name == fieldName:
+        if field.name.lower() == fieldName.lower():
             return True
     return False
