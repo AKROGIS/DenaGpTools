@@ -74,8 +74,8 @@ class ShapeImport(object):
         #            if field.type == "String" and field.name.lower() == "filename":
         #                parameters[2].value = field.name
         #                break
-		
-		#Setup field mapping
+        
+        #Setup field mapping
         if (not parameters[0].hasBeenValidated or not parameters[1].hasBeenValidated):
             targetFeatures = parameters[1].value
             joinFeatures = parameters[0].value
@@ -104,8 +104,9 @@ class ShapeImport(object):
 
     def execute(self, parameters, messages):
         """The source code of the tool."""
-		# copy shapefile.
-		# add filename field to shapefile if it doesn't exist
-		# calculate value of filename field in new temp shapefile
-		# append shapefile to output FC, using field mapping.
+        # copy shapefile.
+        # add filename field to shapefile if it doesn't exist
+        # calculate value of filename field in new temp shapefile
+        # append shapefile to output FC, using field mapping.
+        #delete temp shapefile
         return
