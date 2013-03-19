@@ -1,4 +1,5 @@
 import arcpy
+import os.path
 
 
 class Toolbox(object):
@@ -104,9 +105,34 @@ class ShapeImport(object):
 
     def execute(self, parameters, messages):
         """The source code of the tool."""
-        # copy shapefile.
-        # add filename field to shapefile if it doesn't exist
-        # calculate value of filename field in new temp shapefile
-        # append shapefile to output FC, using field mapping.
-        #delete temp shapefile
+        shapefile = parameters[0].value
+        featureClass = parameters[1].value
+        fileNameFieldName = parameters[2].value
+        fieldMapping = parameters[3].value
+        AddShapefile(shapefile, featureClass, fileNameFieldName, fieldMapping)
         return
+
+    def AddShapefile(shapefile, featureClass, fileNameFieldName, fieldMapping):
+        tempShapefile = None
+        try:
+            # get basename of shapefile without extension
+            fileName = os.path.splitext(os.path.split(shapefile)[1])[0]
+            # copy shapefile to a temp (in-memory) feature class.
+            tempShapefile = arcpy.FeatureClassToFeatureClass_conversion(shapefile, "in_memory", "temp_shapefile", "")
+            # add filename field to temp shapefile if it doesn't exist
+            if not hasField(tempShapefile,fileNameFieldName)
+                arcpy.AddField_management(tempShapefile, fileNameFieldName, "TEXT")
+            # calculate value of filename field in new temp shapefile
+            arcpy.CalculateField_management(tempShapefile, fileNameFieldName, fileName, "PYTHON", "")
+            # append shapefile to output FC, using field mapping.
+            arcpy.Append_management([tempShapefile], featureClass, "NO_TEST", fieldMapping)
+        finally:
+            #delete temp shapefile
+            if tempShapefile:
+                arcpy.Delete_management(tempShapefile)
+    
+    def hasField(featureClass,fieldName)
+        for field in arcpy.ListFields(featureClass):
+            if field.Name == fieldName.:
+                return True
+        return False
