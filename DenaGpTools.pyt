@@ -114,36 +114,14 @@ def AddShapefile(shapefile, featureClass, fileNameFieldName, fieldMapping):
         fileName = os.path.splitext(os.path.split(shapefile)[1])[0]
         # copy shapefile to a temp (in-memory) feature class.
         tempShapefile = arcpy.FeatureClassToFeatureClass_conversion(shapefile, "in_memory", "temp_shapefile", "")
-        #tempWorkspace = arcpy.env.scratchGDB
-        #tempName = arcpy.CreateUniqueName("addShape", tempWorkspace)
-        #tempName = os.path.split(tempName)[1]
-        #arcpy.AddWarning("workspace: " + tempWorkspace + " name: " + tempName)
-        #tempShapefile = arcpy.FeatureClassToFeatureClass_conversion(shapefile, tempWorkspace, tempName, "")
         # add filename field to temp shapefile if it doesn't exist
         if not hasField(tempShapefile,fileNameFieldName):
             arcpy.AddField_management(tempShapefile, fileNameFieldName, "TEXT")
-            if hasField(tempShapefile,fileNameFieldName):
-                arcpy.AddWarning("has field")
-            else:
-                arcpy.AddWarning("no has field")
-            #add this new field to the field mapping
-            fm = arcpy.FieldMappings()
-            fm.addTable(tempShapefile)
-            for f in fm.fieldMappings:
-                if f.outputField.name == fileNameFieldName:
-                    fieldMap = f
-            
-            #fieldMap = arcpy.FieldMap()
-            #fieldMap.addInputField(tempShapefile,fileNameFieldName)
-            #fieldMap.addInputField(shapefile,fileNameFieldName)
-            #fieldMap.addInputField("in_memory/temp_shapefile",fileNameFieldName)
-            #type_name = fieldMap.outputField
-            #type_name.name = fileNameFieldName
-            #fieldMap.outputField = type_name
-            arcpy.AddWarning("field Map:" + str(fieldMap) + " type " + str(type(fieldMap)))
-            arcpy.AddWarning("input count " + str(fieldMap.inputFieldCount) + " output field " + fieldMap.outputField.name)
-            arcpy.AddWarning("input 1 " + fieldMap.getInputTableName(0) + " " + fieldMap.getInputFieldName(0))
-            fieldMapping.addFieldMap(fieldMap)
+            map = arcpy.FieldMap()
+            map.addInputField(tempShapefile,fileNameFieldName)
+            #fieldMapping.addFieldMap(map) # ValueError: FieldMappings: AddFieldMap input not field map object      
+            #FIXME - workaround - We overwrite the user specified field mapping
+            fieldMapping.addTable(tempShapefile)
         # calculate value of filename field in new temp shapefile
         arcpy.CalculateField_management(tempShapefile, fileNameFieldName, '"' + fileName + '"')
         # append shapefile to output FC, using field mapping.
