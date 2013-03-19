@@ -120,15 +120,18 @@ def AddShapefile(shapefile, featureClass, fileNameFieldName, fieldMapping):
         # add filename field to temp feature class if it doesn't exist
         if not hasField(tempFC,fileNameFieldName):
             arcpy.AddField_management(tempFC, fileNameFieldName, "TEXT")
+            # Add the new field to the user's field mappings.
+            # because the filedmappings were created with AddTable(), we cannot call AddFieldMap()
+            newMappings = arcpy.FieldMappings()
             map = arcpy.FieldMap()
             map.addInputField(tempFC,fileNameFieldName)
-            #fieldMapping.addFieldMap(map) # ValueError: FieldMappings: AddFieldMap input not field map object      
-            #FIXME - workaround - Overwrite the user specified field mapping
-            fieldMapping.addTable(tempFC)
+            newMappings.addFieldMap(map)
+            for oldmap in fieldMapping.fieldMappings:
+                newMappings.addFieldMap(oldmap)
         # write the shapefile filename in all rows of the temp feature class
         arcpy.CalculateField_management(tempFC, fileNameFieldName, '"' + fileName + '"')
         # append temp feature class to output feature class, using field mapping.
-        arcpy.Append_management([tempFC], featureClass, "NO_TEST", fieldMapping)
+        arcpy.Append_management([tempFC], featureClass, "NO_TEST", newMappings)
     finally:
         #delete temp feature class
         if tempFC:
