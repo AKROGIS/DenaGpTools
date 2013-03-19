@@ -54,7 +54,6 @@ class ShapeImport(object):
             datatype="GPFieldMapping",
             parameterType="Optional",
             direction="Input")
-
         
         return [param0, param1, param2, param3]
 
@@ -68,13 +67,28 @@ class ShapeImport(object):
         has been changed."""
         #See http://resources.arcgis.com/en/help/main/10.1/index.html#/Customizing_tool_behavior_in_a_Python_toolbox/00150000002m000000/
         
-        #set default field name
+        #set default field name - this does not work.  Can't set the parameter to a field object
         #if parameters[1].value:
         #    if not parameters[2].altered:
         #        for field in arcpy.Describe(parameters[1].value).fields:
         #            if field.type == "String" and field.name.lower() == "filename":
         #                parameters[2].value = field.name
         #                break
+		
+		#Setup field mapping
+        if (not parameters[0].hasBeenValidated or not parameters[1].hasBeenValidated):
+            targetFeatures = parameters[1].value
+            joinFeatures = parameters[0].value
+            fieldMappings = arcpy.FieldMappings()
+            if targetFeatures:
+                fieldMappings.addTable(targetFeatures)
+                if joinFeatures:
+                    fieldMappings.addTable(joinFeatures)
+                    #idx = fieldMappings.findFieldMapIndex("PRIORITY")
+                    #fieldMap = fieldMappings.getFieldMap(idx)
+                    #fieldMap.mergeRule = 'Sum'
+                    #fieldMappings.replaceFieldMap(idx, fieldMap) # if this line is commented out, the merge rule reverts to 'First'
+            parameters[3].value = fieldMappings.exportToString()
         return
 
     def updateMessages(self, parameters):
@@ -90,4 +104,8 @@ class ShapeImport(object):
 
     def execute(self, parameters, messages):
         """The source code of the tool."""
+		# copy shapefile.
+		# add filename field to shapefile if it doesn't exist
+		# calculate value of filename field in new temp shapefile
+		# append shapefile to output FC, using field mapping.
         return
