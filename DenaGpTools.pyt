@@ -128,10 +128,11 @@ def AddShapefile(shapefile, featureClass, fileNameFieldName, fieldMapping):
             newMappings.addFieldMap(map)
             for oldmap in fieldMapping.fieldMappings:
                 newMappings.addFieldMap(oldmap)
+            fieldMapping = newMappings
         # write the shapefile filename in all rows of the temp feature class
         arcpy.CalculateField_management(tempFC, fileNameFieldName, '"' + fileName + '"')
         # append temp feature class to output feature class, using field mapping.
-        arcpy.Append_management([tempFC], featureClass, "NO_TEST", newMappings)
+        arcpy.Append_management([tempFC], featureClass, "NO_TEST", fieldMapping)
     finally:
         #delete temp feature class
         if tempFC:
