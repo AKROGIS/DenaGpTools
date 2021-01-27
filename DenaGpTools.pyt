@@ -13,6 +13,7 @@ import os.path
 
 import arcpy
 
+
 class Toolbox(object):
     def __init__(self):
         """Define the toolbox (the name of the toolbox is the name of the
@@ -33,40 +34,44 @@ class ShapeImport(object):
         self.canRunInBackground = False
 
     def getParameterInfo(self):
-        #See http://resources.arcgis.com/en/help/main/10.1/index.html#/Defining_parameters_in_a_Python_toolbox/001500000028000000/
+        # See http://resources.arcgis.com/en/help/main/10.1/index.html#/Defining_parameters_in_a_Python_toolbox/001500000028000000/
 
         param0 = arcpy.Parameter(
             displayName="Shapefile",
             name="shapefile",
             datatype="DEShapefile",
             parameterType="Required",
-            direction="Input")
+            direction="Input",
+        )
 
         param1 = arcpy.Parameter(
             displayName="GDB Feature Class",
             name="geodatabase",
             datatype="DEFeatureClass",
             parameterType="Required",
-            direction="Input")
+            direction="Input",
+        )
 
         param2 = arcpy.Parameter(
             displayName="Name Field",
             name="name_field",
             datatype="Field",
             parameterType="Required",
-            direction="Input")
-            
-        #param2 must be a text field from param1
+            direction="Input",
+        )
+
+        # param2 must be a text field from param1
         param2.parameterDependencies = [param1.name]
         param2.filter.list = ["Text"]
-        
+
         param3 = arcpy.Parameter(
             displayName="Field Mapping",
             name="field_mapping",
             datatype="GPFieldMapping",
             parameterType="Optional",
-            direction="Input")
-        
+            direction="Input",
+        )
+
         return [param0, param1, param2, param3]
 
     def isLicensed(self):
@@ -77,20 +82,20 @@ class ShapeImport(object):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
-        #See http://resources.arcgis.com/en/help/main/10.1/index.html#/Customizing_tool_behavior_in_a_Python_toolbox/00150000002m000000/
-        
-        #set default field name - this does not work.  Can't set the parameter to a field object
+        # See http://resources.arcgis.com/en/help/main/10.1/index.html#/Customizing_tool_behavior_in_a_Python_toolbox/00150000002m000000/
+
+        # set default field name - this does not work.  Can't set the parameter to a field object
         if parameters[1].value:
             if not parameters[2].altered:
                 for field in arcpy.Describe(parameters[1].value).fields:
                     if field.type == "String" and field.name.lower() == "filename":
-                        #parameters[2].valueAsText = field.name  #can't set ValueAsText
-                        #parameters[2].value = field.name  #Validation error field.Name is text, not field object
+                        # parameters[2].valueAsText = field.name  #can't set ValueAsText
+                        # parameters[2].value = field.name  #Validation error field.Name is text, not field object
                         parameters[2].value = field  # Leaves value as null
                         break
-        
-        #Setup field mapping
-        if (not parameters[0].hasBeenValidated):
+
+        # Setup field mapping
+        if not parameters[0].hasBeenValidated:
             joinFeatures = parameters[0].value
             fieldMappings = arcpy.FieldMappings()
             if joinFeatures:
@@ -104,9 +109,12 @@ class ShapeImport(object):
 
         # check that geometries match
         if parameters[0].value and parameters[1].value:
-            if arcpy.Describe(parameters[0].value).shapeType != arcpy.Describe(parameters[1].value).shapeType:
+            if (
+                arcpy.Describe(parameters[0].value).shapeType
+                != arcpy.Describe(parameters[1].value).shapeType
+            ):
                 parameters[1].setErrorMessage("Geometry does not match Shapefile.")
-        
+
         return
 
     def execute(self, parameters, messages):
@@ -118,24 +126,27 @@ class ShapeImport(object):
         AddShapefile(shapefile, featureClass, fileNameFieldName, fieldMapping)
         return
 
+
 def AddShapefile(shapefile, featureClass, fileNameFieldName, fieldMapping):
-    """ Appends a shapefile to a featureclass, writing the shapefile name into
+    """Appends a shapefile to a featureclass, writing the shapefile name into
     the fileNameFieldName field in the featureClass."""
-    
+
     tempFC = None
     try:
         # get basename of shapefile without extension
         fileName = os.path.splitext(os.path.split(shapefile)[1])[0]
         # copy shapefile to a temp (in-memory) feature class.
-        tempFC = arcpy.FeatureClassToFeatureClass_conversion(shapefile, "in_memory", "temp_fc", "")
+        tempFC = arcpy.FeatureClassToFeatureClass_conversion(
+            shapefile, "in_memory", "temp_fc", ""
+        )
         # add filename field to temp feature class if it doesn't exist
-        if not hasField(tempFC,fileNameFieldName):
+        if not hasField(tempFC, fileNameFieldName):
             arcpy.AddField_management(tempFC, fileNameFieldName, "TEXT")
             # Add the new field to the user's field mappings.
             # because the filedmappings were created with AddTable(), we cannot call AddFieldMap()
             newMappings = arcpy.FieldMappings()
             map = arcpy.FieldMap()
-            map.addInputField(tempFC,fileNameFieldName)
+            map.addInputField(tempFC, fileNameFieldName)
             newMappings.addFieldMap(map)
             for oldmap in fieldMapping.fieldMappings:
                 newMappings.addFieldMap(oldmap)
@@ -145,11 +156,12 @@ def AddShapefile(shapefile, featureClass, fileNameFieldName, fieldMapping):
         # append temp feature class to output feature class, using field mapping.
         arcpy.Append_management([tempFC], featureClass, "NO_TEST", fieldMapping)
     finally:
-        #delete temp feature class
+        # delete temp feature class
         if tempFC:
             arcpy.Delete_management(tempFC)
 
-def hasField(featureClass,fieldName):
+
+def hasField(featureClass, fieldName):
     for field in arcpy.ListFields(featureClass):
         if field.name.lower() == fieldName.lower():
             return True
